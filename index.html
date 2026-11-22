@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jurnal alimentar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a1a;
+      line-height: 1.4;
+    }
+    .header {
+      background: #1e293b;
+      color: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 600; }
+    .nav-tabs a {
+      color: #94a3b8;
+      text-decoration: none;
+      margin-left: 20px;
+      font-size: 0.95rem;
+    }
+    .nav-tabs a.active { color: white; border-bottom: 2px solid white; padding-bottom: 2px; }
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 24px;
+    }
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .date-nav button, .btn {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .date-nav button:hover, .btn:hover { background: #e2e8f0; }
+    .date-display {
+      font-weight: 600;
+      min-width: 110px;
+      text-align: center;
+    }
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 70px;
+      padding: 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      resize: vertical;
+      margin-bottom: 12px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    select {
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+    }
+    .btn-primary {
+      background: #0d9488;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-primary:hover { background: #0f766e; }
+    .btn-secondary {
+      background: white;
+      border: 1px solid #e2e8f0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+    th, td {
+      padding: 8px 6px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    th { color: #64748b; font-weight: 500; }
+    input[type="number"] {
+      width: 60px;
+      padding: 4px 6px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+    }
+    .water-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .water-btns button {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .water-progress {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .sidebar .card { position: sticky; top: 20px; }
+    .nutrient {
+      margin-bottom: 14px;
+    }
+    .nutrient-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #0d9488;
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .history-table th, .history-table td {
+      font-size: 0.85rem;
+      padding: 6px 4px;
+    }
+    .empty-msg {
+      color: #94a3b8;
+      font-size: 0.9rem;
+      margin: 8px 0;
+    }
+    .kcal-preview {
+      font-weight: 600;
+      color: #0d9488;
+      margin-right: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Jurnal alimentar</h1>
+    <div class="nav-tabs">
+      <a href="#" class="active">Azi</a>
+      <a href="#">Idei de mese</a>
+      <a href="#">Setări</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="main">
+      <!-- Date navigation -->
+      <div class="card">
+        <div class="date-nav">
+          <button onclick="changeDay(-1)">Ziua anterioară</button>
+          <div class="date-display" id="currentDate">11/21/2026</div>
+          <button onclick="changeDay(1)">Ziua următoare</button>
+        </div>
+
+        <!-- Ce ai mâncat -->
+        <div class="section-title">Ce ai mâncat</div>
+        <textarea id="foodInput" placeholder="Ex: 4 ouă, 2 felii pâine, cafea cu lapte..."></textarea>
+        
+        <div class="controls">
+          <select id="mealType">
+            <option value="Mic dejun">Mic dejun</option>
+            <option value="Prânz">Prânz</option>
+            <option value="Cină">Cină</option>
+            <option value="Gustare">Gustare</option>
+          </select>
+          <button class="btn-primary" onclick="calculateFood()">Calculează valorile</button>
+          <span style="font-size:0.8rem;color:#64748b;align-self:center;">Estimare locală. Verifică valorile.</span>
+        </div>
+
+        <div id="calcResult" style="display:none;">
+          <table>
+            <thead>
+              <tr>
+                <th>Aliment</th>
+                <th>g</th>
+                <th>kcal</th>
+                <th>Prot.</th>
+                <th>Carbo</th>
+                <th>Grăs.</th>
+              </tr>
+            </thead>
+            <tbody id="calcTableBody"></tbody>
+          </table>
+          <div style="margin-top:12px;">
+            <span class="kcal-preview" id="totalKcalPreview">0 kcal</span>
+            <button class="btn-primary" onclick="addToJournal()">Adaugă în jurnal</button>
+            <button class="btn-secondary" onclick="cancelCalc()">Renunță</button>
+          </div>
+        </div>
+
+        <div id="journalList"></div>
+        <div class="empty-msg" id="emptyJournal">Nimic înregistrat pentru ziua asta.</div>
+      </div>
+
+      <!-- Apă -->
+      <div class="card">
+        <div class="section-title">Apă</div>
+        <div class="water-btns">
+          <button onclick="addWater(250)">+250 ml</button>
+          <button onclick="addWater(500)">+500 ml</button>
+          <button onclick="addWater(750)">+750 ml</button>
+          <button onclick="removeLastWater()">Șterge ultima</button>
+        </div>
+        <div class="water-progress" id="waterProgress">0 ml băuți din 2450 ml (0 înregistrări)</div>
+      </div>
+
+      <!-- Exerciții -->
+      <div class="card">
+        <div class="section-title">Exerciții</div>
+        <div class="controls">
+          <select id="exerciseType">
+            <option value="Mers">Mers</option>
+            <option value="Alergare">Alergare</option>
+            <option value="Ciclism">Ciclism</option>
+            <option value="Sală">Sală</option>
+            <option value="Înot">Înot</option>
+            <option value="Yoga">Yoga</option>
+          </select>
+          <input type="number" id="exerciseMinutes" placeholder="minute" min="1" style="width:80px;">
+          <button class="btn-primary" onclick="addExercise()">Adaugă</button>
+        </div>
+        <div id="exerciseList"></div>
+        <div class="empty-msg" id="emptyExercise">Niciun exercițiu înregistrat.</div>
+      </div>
+
+      <!-- Ultimele 7 zile -->
+      <div class="card">
+        <div class="section-title">Ultimele 7 zile</div>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Ziua</th>
+              <th>kcal</th>
+              <th>Apă (ml)</th>
+              <th>Exerciții (min)</th>
+              <th>Arse (kcal)</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sidebar valori nutriționale -->
+    <div class="sidebar">
+      <div class="card">
+        <div class="section-title">Valori nutriționale</div>
+        
+        <div class="nutrient">
+          <div class="nutrient-header">
+            <span>Energie</span>
+            <span id="energyText">0 din 1767 kcal</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="energyBar" style="width:0%"></div></div>
+        </div>
+
+        <div style="font-size:0.8rem;color:#64748b;margin-bottom:12px;">
+          Arse prin exerciții: <span id="burnedText">0</span> kcal. Bilanț: <span id="balanceText">0</span> kcal.
+        </div>
+
+        <div class="nutrient">
+          <div class="nutrient-header">
+            <span>Proteine</span>
+            <span id="proteinText">0 din 126 g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="proteinBar" style="width:0%"></div></div>
+        </div>
+
+        <div class="nutrient">
+          <div class="nutrient-header">
+            <span>Carbohidrați</span>
+            <span id="carbsText">0 din 197 g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="carbsBar" style="width:0%"></div></div>
+        </div>
+
+        <div class="nutrient">
+          <div class="nutrient-header">
+            <span>Grăsimi</span>
+            <span id="fatsText">0 din 53 g</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="fatsBar" style="width:0%"></div></div>
+        </div>
+
+        <div class="nutrient">
+          <div class="nutrient-header">
+            <span>Apă</span>
+            <span id="waterText">0 din 2450 ml</span>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" id="waterBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ===================== CONFIG & DATA =====================
+const GOALS = {
+  kcal: 1767,
+  protein: 126,
+  carbs: 197,
+  fats: 53,
+  water: 2450
+};
+
+// Bază de date locală (per 100g) – AI independent
+const FOOD_DB = {
+  "ou": { kcal: 155, protein: 13, carbs: 1.1, fats: 11 },
+  "oua": { kcal: 155, protein: 13, carbs: 1.1, fats: 11 },
+  "ouă": { kcal: 155, protein: 13, carbs: 1.1, fats: 11 },
+  "paine": { kcal: 265, protein: 9, carbs: 49, fats: 3.2 },
+  "pâine": { kcal: 265, protein: 9, carbs: 49, fats: 3.2 },
+  "lapte": { kcal: 42, protein: 3.4, carbs: 5, fats: 1 },
+  "iaurt": { kcal: 59, protein: 10, carbs: 3.6, fats: 0.4 },
+  "branza": { kcal: 264, protein: 18, carbs: 1.3, fats: 21 },
+  "brânză": { kcal: 264, protein: 18, carbs: 1.3, fats: 21 },
+  "pui": { kcal: 165, protein: 31, carbs: 0, fats: 3.6 },
+  "carne pui": { kcal: 165, protein: 31, carbs: 0, fats: 3.6 },
+  "vita": { kcal: 250, protein: 26, carbs: 0, fats: 15 },
+  "vită": { kcal: 250, protein: 26, carbs: 0, fats: 15 },
+  "porc": { kcal: 242, protein: 27, carbs: 0, fats: 14 },
+  "somon": { kcal: 208, protein: 20, carbs: 0, fats: 13 },
+  "orez": { kcal: 130, protein: 2.7, carbs: 28, fats: 0.3 },
+  "paste": { kcal: 131, protein: 5, carbs: 25, fats: 1.1 },
+  "cartofi": { kcal: 77, protein: 2, carbs: 17, fats: 0.1 },
+  "mar": { kcal: 52, protein: 0.3, carbs: 14, fats: 0.2 },
+  "măr": { kcal: 52, protein: 0.3, carbs: 14, fats: 0.2 },
+  "banana": { kcal: 89, protein: 1.1, carbs: 23, fats: 0.3 },
+  "banană": { kcal: 89, protein: 1.1, carbs: 23, fats: 0.3 },
+  "oua fierte": { kcal: 155, protein: 13, carbs: 1.1, fats: 11 },
+  "cafea": { kcal: 2, protein: 0.1, carbs: 0, fats: 0 },
+  "zahar": { kcal: 387, protein: 0, carbs: 100, fats: 0 },
+  "zahăr": { kcal: 387, protein: 0, carbs: 100, fats: 0 },
+  "ulei": { kcal: 884, protein: 0, carbs: 0, fats: 100 },
+  "unt": { kcal: 717, protein: 0.9, carbs: 0.1, fats: 81 },
+  "avocado": { kcal: 160, protein: 2, carbs: 9, fats: 15 },
+  "spanac": { kcal: 23, protein: 2.9, carbs: 3.6, fats: 0.4 },
+  "brocoli": { kcal: 34, protein: 2.8, carbs: 7, fats: 0.4 },
+  "broccoli": { kcal: 34, protein: 2.8, carbs: 7, fats: 0.4 },
+  "rosii": { kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2 },
+  "roșii": { kcal: 18, protein: 0.9, carbs: 3.9, fats: 0.2 },
+  "castravete": { kcal: 15, protein: 0.7, carbs: 3.6, fats: 0.1 },
+  "morcov": { kcal: 41, protein: 0.9, carbs: 10, fats: 0.2 },
+  "fasole": { kcal: 127, protein: 8.7, carbs: 22, fats: 0.5 },
+  "linte": { kcal: 116, protein: 9, carbs: 20, fats: 0.4 },
+  "nuci": { kcal: 654, protein: 15, carbs: 14, fats: 65 },
+  "migdale": { kcal: 579, protein: 21, carbs: 22, fats: 50 },
+  "ciocolata": { kcal: 546, protein: 4.9, carbs: 61, fats: 31 },
+  "ciocolată": { kcal: 546, protein: 4.9, carbs: 61, fats: 31 }
+};
+
+// Estimări greutate tipică
+const UNIT_WEIGHTS = {
+  "ou": 50, "oua": 50, "ouă": 50,
+  "felie": 30, "felii": 30,
+  "cana": 240, "cană": 240,
+  "lingura": 15, "lingură": 15,
+  "lingurita": 5, "linguriță": 5
+};
+
+let currentDate = new Date(2026, 10, 21); // 21 nov 2026
+let pendingFoods = [];
+
+// ===================== STORAGE =====================
+function getKey(date) {
+  return "jurnal_" + date.toISOString().slice(0, 10);
+}
+
+function loadDay(date) {
+  const raw = localStorage.getItem(getKey(date));
+  return raw ? JSON.parse(raw) : { foods: [], water: [], exercises: [] };
+}
+
+function saveDay(date, data) {
+  localStorage.setItem(getKey(date), JSON.stringify(data));
+}
+
+// ===================== DATE =====================
+function formatDate(d) {
+  return `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()}`;
+}
+
+function changeDay(delta) {
+  currentDate.setDate(currentDate.getDate() + delta);
+  document.getElementById("currentDate").textContent = formatDate(currentDate);
+  renderDay();
+}
+
+// ===================== AI LOCAL (parser + bază de date) =====================
+function parseFoodText(text) {
+  const results = [];
+  const parts = text.toLowerCase().split(/,| și | si | \+ /);
+  
+  for (let part of parts) {
+    part = part.trim();
+    if (!part) continue;
+
+    // Caută cantitate
+    let qty = 100; // default 100g
+    let unit = "g";
+    let name = part;
+
+    // Pattern: "4 ouă", "200g pui", "2 felii pâine"
+    const match = part.match(/(\d+(?:[.,]\d+)?)\s*(g|kg|ml|ou[aăe]?|felii?|can[aă]|linguri?[tț]a?|buc)?\s*(.*)/i);
+    if (match) {
+      qty = parseFloat(match[1].replace(",", "."));
+      unit = (match[2] || "g").toLowerCase();
+      name = (match[3] || "").trim() || part;
+    }
+
+    // Normalizează numele
+    name = name.replace(/[()]/g, "").trim();
+    let foodKey = null;
+    for (const key of Object.keys(FOOD_DB)) {
+      if (name.includes(key) || key.includes(name.split(" ")[0])) {
+        foodKey = key;
+        break;
+      }
+    }
+
+    if (!foodKey) {
+      // Estimare generică
+      results.push({
+        name: part,
+        grams: qty,
+        kcal: Math.round(qty * 1.5),
+        protein: Math.round(qty * 0.1),
+        carbs: Math.round(qty * 0.15),
+        fats: Math.round(qty * 0.05)
+      });
+      continue;
+    }
+
+    const base = FOOD_DB[foodKey];
+    let grams = qty;
+
+    if (unit === "kg") grams = qty * 1000;
+    else if (["ou","oua","ouă","buc"].includes(unit)) grams = qty * 50;
+    else if (["felie","felii"].includes(unit)) grams = qty * 30;
+    else if (["cana","cană"].includes(unit)) grams = qty * 240;
+    else if (["lingura","lingură"].includes(unit)) grams = qty * 15;
+    else if (["lingurita","linguriță"].includes(unit)) grams = qty * 5;
+    else if (unit === "ml") grams = qty; // aproximativ
+
+    const factor = grams / 100;
+    results.push({
+      name: part.charAt(0).toUpperCase() + part.slice(1),
+      grams: Math.round(grams),
+      kcal: Math.round(base.kcal * factor),
+      protein: Math.round(base.protein * factor * 10) / 10,
+      carbs: Math.round(base.carbs * factor * 10) / 10,
+      fats: Math.round(base.fats * factor * 10) / 10
+    });
+  }
+  return results;
+}
+
+function calculateFood() {
+  const text = document.getElementById("foodInput").value.trim();
+  if (!text) return alert("Scrie ce ai mâncat.");
+
+  pendingFoods = parseFoodText(text);
+  const tbody = document.getElementById("calcTableBody");
+  tbody.innerHTML = "";
+  let totalKcal = 0;
+
+  pendingFoods.forEach((f, i) => {
+    totalKcal += f.kcal;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${f.name}</td>
+      <td><input type="number" value="${f.grams}" onchange="updatePending(${i}, 'grams', this.value)"></td>
+      <td><input type="number" value="${f.kcal}" onchange="updatePending(${i}, 'kcal', this.value)"></td>
+      <td><input type="number" value="${f.protein}" step="0.1" onchange="updatePending(${i}, 'protein', this.value)"></td>
+      <td><input type="number" value="${f.carbs}" step="0.1" onchange="updatePending(${i}, 'carbs', this.value)"></td>
+      <td><input type="number" value="${f.fats}" step="0.1" onchange="updatePending(${i}, 'fats', this.value)"></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("totalKcalPreview").textContent = totalKcal + " kcal";
+  document.getElementById("calcResult").style.display = "block";
+}
+
+function updatePending(idx, field, value) {
+  pendingFoods[idx][field] = parseFloat(value) || 0;
+  let total = pendingFoods.reduce((s, f) => s + f.kcal, 0);
+  document.getElementById("totalKcalPreview").textContent = Math.round(total) + " kcal";
+}
+
+function cancelCalc() {
+  document.getElementById("calcResult").style.display = "none";
+  pendingFoods = [];
+}
+
+function addToJournal() {
+  if (!pendingFoods.length) return;
+  const day = loadDay(currentDate);
+  const meal = document.getElementById("mealType").value;
+  pendingFoods.forEach(f => {
+    day.foods.push({ ...f, meal, time: new Date().toISOString() });
+  });
+  saveDay(currentDate, day);
+  document.getElementById("foodInput").value = "";
+  cancelCalc();
+  renderDay();
+}
+
+// ===================== WATER & EXERCISE =====================
+function addWater(ml) {
+  const day = loadDay(currentDate);
+  day.water.push({ ml, time: new Date().toISOString() });
+  saveDay(currentDate, day);
+  renderDay();
+}
+
+function removeLastWater() {
+  const day = loadDay(currentDate);
+  if (day.water.length) {
+    day.water.pop();
+    saveDay(currentDate, day);
+    renderDay();
+  }
+}
+
+function addExercise() {
+  const type = document.getElementById("exerciseType").value;
+  const min = parseInt(document.getElementById("exerciseMinutes").value);
+  if (!min || min < 1) return alert("Introdu minutele.");
+  
+  // Estimare ardere kcal (aproximativă)
+  const rates = { Mers: 4, Alergare: 10, Ciclism: 8, Sală: 7, Înot: 9, Yoga: 3 };
+  const burned = Math.round((rates[type] || 5) * min);
+
+  const day = loadDay(currentDate);
+  day.exercises.push({ type, minutes: min, burned, time: new Date().toISOString() });
+  saveDay(currentDate, day);
+  document.getElementById("exerciseMinutes").value = "";
+  renderDay();
+}
+
+// ===================== RENDER =====================
+function renderDay() {
+  const day = loadDay(currentDate);
+
+  // Jurnal
+  const list = document.getElementById("journalList");
+  list.innerHTML = "";
+  if (day.foods.length === 0) {
+    document.getElementById("emptyJournal").style.display = "block";
+  } else {
+    document.getElementById("emptyJournal").style.display = "none";
+    day.foods.forEach((f, i) => {
+      const div = document.createElement("div");
+      div.style.cssText = "display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:0.9rem;";
+      div.innerHTML = `
+        <div>
+          <strong>${f.name}</strong> <span style="color:#64748b">(${f.meal})</span><br>
+          <span style="color:#64748b">${f.grams}g · ${f.kcal} kcal · P ${f.protein}g · C ${f.carbs}g · G ${f.fats}g</span>
+        </div>
+        <button onclick="deleteFood(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  // Water
+  const totalWater = day.water.reduce((s, w) => s + w.ml, 0);
+  document.getElementById("waterProgress").textContent = 
+    `${totalWater} ml băuți din ${GOALS.water} ml (${day.water.length} înregistrări)`;
+
+  // Exercises
+  const exList = document.getElementById("exerciseList");
+  exList.innerHTML = "";
+  if (day.exercises.length === 0) {
+    document.getElementById("emptyExercise").style.display = "block";
+  } else {
+    document.getElementById("emptyExercise").style.display = "none";
+    day.exercises.forEach((e, i) => {
+      const div = document.createElement("div");
+      div.style.cssText = "display:flex;justify-content:space-between;padding:6px 0;font-size:0.9rem;";
+      div.innerHTML = `
+        <span>${e.type} · ${e.minutes} min · ${e.burned} kcal</span>
+        <button onclick="deleteExercise(${i})" style="background:none;border:none;color:#ef4444;cursor:pointer;">✕</button>
+      `;
+      exList.appendChild(div);
+    });
+  }
+
+  // Totals
+  const totals = day.foods.reduce((acc, f) => {
+    acc.kcal += f.kcal;
+    acc.protein += f.protein;
+    acc.carbs += f.carbs;
+    acc.fats += f.fats;
+    return acc;
+  }, { kcal: 0, protein: 0, carbs: 0, fats: 0 });
+
+  const burned = day.exercises.reduce((s, e) => s + e.burned, 0);
+  const balance = totals.kcal - burned;
+
+  // Sidebar
+  updateBar("energy", totals.kcal, GOALS.kcal, "energyText", "energyBar");
+  document.getElementById("burnedText").textContent = burned;
+  document.getElementById("balanceText").textContent = balance;
+  updateBar("protein", totals.protein, GOALS.protein, "proteinText", "proteinBar");
+  updateBar("carbs", totals.carbs, GOALS.carbs, "carbsText", "carbsBar");
+  updateBar("fats", totals.fats, GOALS.fats, "fatsText", "fatsBar");
+  updateBar("water", totalWater, GOALS.water, "waterText", "waterBar");
+
+  renderHistory();
+}
+
+function updateBar(type, current, goal, textId, barId) {
+  const pct = Math.min(100, (current / goal) * 100);
+  document.getElementById(textId).textContent = `${Math.round(current)} din ${goal} ${type === "energy" ? "kcal" : type === "water" ? "ml" : "g"}`;
+  document.getElementById(barId).style.width = pct + "%";
+}
+
+function deleteFood(idx) {
+  const day = loadDay(currentDate);
+  day.foods.splice(idx, 1);
+  saveDay(currentDate, day);
+  renderDay();
+}
+
+function deleteExercise(idx) {
+  const day = loadDay(currentDate);
+  day.exercises.splice(idx, 1);
+  saveDay(currentDate, day);
+  renderDay();
+}
+
+function renderHistory() {
+  const tbody = document.getElementById("historyBody");
+  tbody.innerHTML = "";
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(currentDate);
+    d.setDate(d.getDate() - i);
+    const day = loadDay(d);
+    const kcal = day.foods.reduce((s, f) => s + f.kcal, 0);
+    const water = day.water.reduce((s, w) => s + w.ml, 0);
+    const mins = day.exercises.reduce((s, e) => s + e.minutes, 0);
+    const burned = day.exercises.reduce((s, e) => s + e.burned, 0);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${formatDate(d)}</td>
+      <td>${kcal || "-"}</td>
+      <td>${water || "-"}</td>
+      <td>${mins || "-"}</td>
+      <td>${burned || "-"}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+// Init
+document.getElementById("currentDate").textContent = formatDate(currentDate);
+renderDay();
+</script>
+</body>
+</html>
